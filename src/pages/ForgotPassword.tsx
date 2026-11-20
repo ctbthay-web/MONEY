@@ -43,6 +43,10 @@ export function ForgotPasswordPage() {
         <p className="text-center text-sm text-ink-secondary">
           Se houver uma conta com esse e-mail, você receberá um link para redefinir sua senha.
         </p>
+        <p className="mt-3 rounded-2xl border border-border px-3 py-2 text-center text-xs text-ink-secondary">
+          Se não aparecer em alguns minutos, olhe as abas <span className="font-semibold text-ink-primary">Spam</span> e{' '}
+          <span className="font-semibold text-ink-primary">Promoções</span> do Gmail.
+        </p>
         <Link to="/login">
           <Button className="mt-6 w-full" size="lg">
             Voltar ao login
