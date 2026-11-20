@@ -292,3 +292,66 @@ export function buildForUser({ prefs, data, now = new Date() }) {
 
   return out
 }
+
+/**
+ * Avisos de assinatura (vencimento/renovação). Independe das preferências de tipo: é sobre o acesso ao app.
+ * profile: { paid_until, billing_status, role, is_lifetime, is_active }
+ * - cancelada (não renova): 3 dias antes, 1 dia antes e no dia
+ * - renovação atrasada (past_due, ex.: Pix não pago): 3 dias antes, 1 dia antes e no dia
+ * - renovando normalmente: 1 lembrete na véspera (quem paga por Pix precisa pagar o código da Kiwify)
+ * - vencida: 2 e 7 dias depois (2, não 1, para dar tempo de a renovação do cartão chegar)
+ */
+export function buildSubscriptionNotices(profile, now = new Date()) {
+  if (!profile?.paid_until || !profile.is_active || profile.role === 'admin' || profile.is_lifetime) return []
+  const status = profile.billing_status
+  if (status === 'refunded') return []
+  const { today } = brasiliaNow(now)
+  const until = brasiliaNow(new Date(profile.paid_until)).today
+  const left = daysBetween(today, until)
+  const url = '/subscription'
+  const when = left === 0 ? 'hoje' : left === 1 ? 'amanhã' : `em ${left} dias (${br(until)})`
+
+  if (left >= 0) {
+    if ((status === 'canceled' || status === 'past_due') && [3, 1, 0].includes(left)) {
+      return [
+        {
+          kind: 'subscription',
+          level: left <= 1 ? 'alert' : 'reminder',
+          dedupe_key: `sub-${status}:${until}:${left}`,
+          title: status === 'canceled' ? 'Seu plano está terminando' : 'Pagamento da assinatura pendente',
+          body:
+            status === 'canceled'
+              ? `Seu acesso ao Money termina ${when}. Assine de novo para continuar registrando.`
+              : `A renovação ainda não foi paga e seu acesso termina ${when}. Pague o código que a Kiwify enviou por e-mail.`,
+          url,
+        },
+      ]
+    }
+    if (status !== 'canceled' && status !== 'past_due' && left === 1) {
+      return [
+        {
+          kind: 'subscription',
+          level: 'info',
+          dedupe_key: `sub-renew:${until}`,
+          title: 'Sua assinatura renova amanhã',
+          body: 'No cartão a renovação é automática. Se você paga por Pix, pague o código que a Kiwify envia por e-mail.',
+          url,
+        },
+      ]
+    }
+    return []
+  }
+  if (left === -2 || left === -7) {
+    return [
+      {
+        kind: 'subscription',
+        level: 'alert',
+        dedupe_key: `sub-expired:${until}:${-left}`,
+        title: 'Sua assinatura venceu',
+        body: 'Seus dados continuam salvos, mas você não consegue registrar nem editar. Renove para voltar a usar o Money.',
+        url,
+      },
+    ]
+  }
+  return []
+}
