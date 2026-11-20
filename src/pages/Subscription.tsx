@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Crown, Sparkles } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { Modal } from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
 import { PlanCards } from '../components/finance/PlanCards'
 import { useAuth } from '../features/auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { computeAccess } from '../lib/access'
 import { effectivePlan, planById } from '../lib/plans'
+import { LEGAL, supportMailto, supportWhatsappUrl } from '../lib/legal'
 
 function fmt(d: Date) {
   return d.toLocaleDateString('pt-BR')
@@ -46,6 +48,7 @@ export function SubscriptionPage() {
   const access = computeAccess(profile)
   const [loading, setLoading] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [kiwifyCancelOpen, setKiwifyCancelOpen] = useState(false)
 
   const canceled = profile?.billing_status === 'canceled'
   const provider = profile?.billing_provider
@@ -182,9 +185,12 @@ export function SubscriptionPage() {
       )}
 
       {access?.kind === 'active' && !canceled && provider === 'kiwify' && (
-        <p className="text-xs text-ink-muted">
-          Para cancelar a renovação, use o link de gerenciar assinatura no e-mail de compra da Kiwify.
-        </p>
+        <button
+          onClick={() => setKiwifyCancelOpen(true)}
+          className="self-start text-sm font-medium text-ink-secondary hover:text-danger"
+        >
+          Cancelar assinatura
+        </button>
       )}
 
       {access?.kind === 'active' && !canceled && provider === 'asaas' && (
@@ -192,6 +198,59 @@ export function SubscriptionPage() {
           Cancelar renovação
         </button>
       )}
+
+      <Modal open={kiwifyCancelOpen} onClose={() => setKiwifyCancelOpen(false)} title="Cancelar assinatura">
+        <div className="flex flex-col gap-4 text-sm text-ink-secondary">
+          <p>
+            Sua assinatura é renovada todo mês pela Kiwify. Ao cancelar, você não é mais cobrado e{' '}
+            <strong className="text-ink-primary">continua com acesso até o fim do período já pago</strong>
+            {profile?.paid_until ? ` (${fmt(new Date(profile.paid_until))})` : ''}.
+          </p>
+          <ol className="flex list-decimal flex-col gap-2 pl-5">
+            <li>
+              Abra o e-mail de confirmação da compra que a Kiwify enviou para{' '}
+              <strong className="text-ink-primary">{user?.email}</strong> e toque em gerenciar assinatura.
+            </li>
+            <li>
+              Ou entre em{' '}
+              <a
+                href="https://dashboard.kiwify.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-brand-400 underline"
+              >
+                dashboard.kiwify.com.br
+              </a>{' '}
+              com esse mesmo e-mail, abra suas compras/assinaturas e cancele a do Money.
+            </li>
+          </ol>
+          {(LEGAL.supportWhatsapp || LEGAL.supportEmail) && (
+            <div className="rounded-2xl border border-border p-3">
+              <p className="mb-2">Não conseguiu? Peça para nós e cancelamos para você:</p>
+              <div className="flex flex-wrap gap-3">
+                {LEGAL.supportWhatsapp && (
+                  <a
+                    href={supportWhatsappUrl(`Olá! Quero cancelar minha assinatura do Money. Meu e-mail: ${user?.email ?? ''}`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-brand-400 underline"
+                  >
+                    Pedir pelo WhatsApp
+                  </a>
+                )}
+                {LEGAL.supportEmail && (
+                  <a
+                    href={supportMailto(`Cancelar assinatura Money - ${user?.email ?? ''}`)}
+                    className="font-medium text-brand-400 underline"
+                  >
+                    Pedir por e-mail
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={cancelOpen}
