@@ -9,10 +9,12 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { supabase } from '../lib/supabase'
 import { translateAuthError } from '../lib/authErrors'
+import { IDLE_LIMIT_MIN, setRemember, takeLogoutReason } from '../lib/sessionPolicy'
 
 const schema = z.object({
   email: z.string().min(1, 'Informe seu e-mail').email('E-mail inválido'),
   password: z.string().min(1, 'Informe sua senha'),
+  remember: z.boolean(),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -23,6 +25,7 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [formError, setFormError] = useState<string | null>(null)
+  const [idleNotice] = useState(() => takeLogoutReason() === 'idle')
   const [failedAttempts, setFailedAttempts] = useState(0)
   const [lockedUntil, setLockedUntil] = useState<number | null>(null)
   const [secondsLeft, setSecondsLeft] = useState(0)
@@ -31,7 +34,7 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { remember: false } })
 
   useEffect(() => {
     if (!lockedUntil) return
@@ -54,7 +57,7 @@ export function LoginPage() {
   async function onSubmit(values: FormValues) {
     if (isLocked) return
     setFormError(null)
-    const { error } = await supabase.auth.signInWithPassword(values)
+    const { error } = await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
     if (error) {
       const nextAttempts = failedAttempts + 1
       setFailedAttempts(nextAttempts)
@@ -68,12 +71,18 @@ export function LoginPage() {
       return
     }
     setFailedAttempts(0)
+    setRemember(values.remember)
     const redirectTo = (location.state as { from?: Location })?.from?.pathname ?? '/'
     navigate(redirectTo, { replace: true })
   }
 
   return (
     <AuthLayout title="Entrar" subtitle="Acesse sua conta Money">
+      {idleNotice && (
+        <p className="mb-4 rounded-2xl border border-border px-3 py-2 text-center text-sm text-ink-secondary">
+          Por segurança, saímos da sua conta depois de {IDLE_LIMIT_MIN} minutos sem uso. Entre de novo para continuar.
+        </p>
+      )}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Input
           label="E-mail"
@@ -93,7 +102,11 @@ export function LoginPage() {
           autoComplete="current-password"
           {...register('password')}
         />
-        <div className="flex justify-end -mt-1">
+        <div className="-mt-1 flex items-center justify-between gap-3">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-secondary">
+            <input type="checkbox" className="h-4 w-4 shrink-0 accent-brand-400" {...register('remember')} />
+            Manter conectado
+          </label>
           <Link to="/forgot-password" className="text-xs font-medium text-brand-300 hover:text-brand-200">
             Esqueceu a senha?
           </Link>

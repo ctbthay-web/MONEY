@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
+import { clearSessionPolicy, isIdleExpired, isRemembered, markActive, setLogoutReason } from '../../lib/sessionPolicy'
 import type { Profile } from '../../types/database'
 
 interface AuthContextValue {
@@ -34,6 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return
+      // "Manter conectado" desmarcado e muito tempo sem usar: encerra antes de mostrar qualquer dado
+      if (data.session && isIdleExpired()) {
+        setLogoutReason('idle')
+        clearSessionPolicy()
+        await supabase.auth.signOut({ scope: 'local' })
+        if (!mounted) return
+        setSession(null)
+        setLoading(false)
+        return
+      }
       setSession(data.session)
       if (data.session?.user.id) await loadProfile(data.session.user.id)
       setLoading(false)
@@ -55,7 +66,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // enquanto o app está aberto: conta o uso e encerra por inatividade (só para quem não marcou "Manter conectado")
+  const userId = session?.user.id
+  useEffect(() => {
+    if (!userId || isRemembered()) return
+    let done = false
+    const expire = async () => {
+      if (done) return
+      done = true
+      setLogoutReason('idle')
+      clearSessionPolicy()
+      await supabase.auth.signOut({ scope: 'local' })
+    }
+    const onActivity = () => markActive()
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      if (isIdleExpired()) void expire()
+      else markActive(true)
+    }
+    const events = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }))
+    document.addEventListener('visibilitychange', onVisible)
+    const id = setInterval(() => {
+      if (isIdleExpired()) void expire()
+    }, 60_000)
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, onActivity))
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(id)
+    }
+  }, [userId])
+
   async function signOut() {
+    clearSessionPolicy()
     await supabase.auth.signOut()
     setProfile(null)
   }
