@@ -4,7 +4,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import webpush from 'web-push'
 import { adminClient } from './_lib/billing.js'
-import { brasiliaNow, buildForUser } from './_lib/notifications.js'
+import { brasiliaNow, buildForUser, buildSubscriptionNotices } from './_lib/notifications.js'
 
 const DEFAULT_PREFS = {
   enabled: true,
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     // só usuários com conta ativa e acesso (mesma regra do app: has_access)
     const { data: accessRows } = await db
       .from('profiles')
-      .select('id, is_active, role, is_lifetime, trial_ends_at, paid_until')
+      .select('id, is_active, role, is_lifetime, trial_ends_at, paid_until, billing_status')
       .in('id', userIds)
     const nowIso = new Date().toISOString()
     const active = new Set(
@@ -91,7 +91,15 @@ export default async function handler(req, res) {
     )
 
     const targets = userIds.filter((id) => active.has(id) && (prefsByUser.get(id) ?? DEFAULT_PREFS).enabled)
-    if (targets.length === 0) return res.status(200).json({ ok: true, ...stats })
+
+    // avisos de assinatura: inclusive quem venceu há poucos dias (esses não recebem os avisos financeiros)
+    const subNotices = new Map()
+    for (const p of accessRows || []) {
+      if (!(prefsByUser.get(p.id) ?? DEFAULT_PREFS).enabled) continue
+      const notices = buildSubscriptionNotices(p)
+      if (notices.length) subNotices.set(p.id, notices)
+    }
+    if (targets.length === 0 && subNotices.size === 0) return res.status(200).json({ ok: true, ...stats })
 
     const dayMs = 86400000
     const horizon = new Date(Date.parse(today + 'T00:00:00Z') + 10 * dayMs).toISOString().slice(0, 10)
@@ -170,10 +178,11 @@ export default async function handler(req, res) {
       spent: by(monthExpenses),
     }
 
-    for (const userId of targets) {
+    const targetSet = new Set(targets)
+    for (const userId of new Set([...targets, ...subNotices.keys()])) {
       stats.users++
       const prefs = { ...DEFAULT_PREFS, ...(prefsByUser.get(userId) ?? {}) }
-      const items = buildForUser({
+      const financial = !targetSet.has(userId) ? [] : buildForUser({
         prefs,
         data: {
           accounts: g.acc.get(userId) ?? [],
@@ -188,6 +197,7 @@ export default async function handler(req, res) {
           categories: categoryRows,
         },
       })
+      const items = [...(subNotices.get(userId) ?? []), ...financial]
       if (items.length === 0) continue
 
       // grava no histórico; a chave única (user_id, dedupe_key) impede enviar a mesma de novo
