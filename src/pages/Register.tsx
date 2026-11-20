@@ -26,7 +26,7 @@ const schema = z
       .min(1, 'Informe seu e-mail')
       .email('E-mail inválido')
       .refine((v) => /@(gmail|googlemail)\.com$/i.test(v), {
-        message: 'Por enquanto o cadastro aceita só e-mails do Gmail (terminados em @gmail.com).',
+        message: 'Por enquanto o cadastro é só com Gmail (@gmail.com). Se não tiver, dá para criar um grátis em 2 minutos.',
       }),
     password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
     confirmPassword: z.string().min(1, 'Confirme sua senha'),
@@ -248,6 +248,7 @@ export function RegisterPage() {
           autoComplete="email"
           {...register('email')}
         />
+        {!errors.email && <p className="-mt-2 text-xs text-ink-muted">Use seu e-mail do Gmail.</p>}
         <Input
           label="Senha"
           type="password"
