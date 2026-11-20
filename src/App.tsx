@@ -28,12 +28,14 @@ import { PrivacyPage, TermsPage } from './pages/Legal'
 import { LandingPage } from './pages/Landing'
 import { PlansPage } from './pages/Plans'
 import { ThankYouPage } from './pages/ThankYou'
+import { UpdateBanner } from './components/ui/UpdateBanner'
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <div className="app-aurora" aria-hidden="true" />
+        <UpdateBanner />
         <BrowserRouter>
           <AuthProvider>
             <Routes>
