@@ -49,6 +49,7 @@ export function SubscriptionPage() {
   const [loading, setLoading] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [kiwifyCancelOpen, setKiwifyCancelOpen] = useState(false)
+  const [refundOpen, setRefundOpen] = useState(false)
 
   const canceled = profile?.billing_status === 'canceled'
   const provider = profile?.billing_provider
@@ -184,13 +185,20 @@ export function SubscriptionPage() {
         </p>
       )}
 
-      {access?.kind === 'active' && !canceled && provider === 'kiwify' && (
-        <button
-          onClick={() => setKiwifyCancelOpen(true)}
-          className="self-start text-sm font-medium text-ink-secondary hover:text-danger"
-        >
-          Cancelar assinatura
-        </button>
+      {access?.kind === 'active' && provider === 'kiwify' && (
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {!canceled && (
+            <button
+              onClick={() => setKiwifyCancelOpen(true)}
+              className="text-sm font-medium text-ink-secondary hover:text-danger"
+            >
+              Cancelar assinatura
+            </button>
+          )}
+          <button onClick={() => setRefundOpen(true)} className="text-sm font-medium text-ink-secondary hover:text-danger">
+            Pedir reembolso
+          </button>
+        </div>
       )}
 
       {access?.kind === 'active' && !canceled && provider === 'asaas' && (
@@ -241,6 +249,62 @@ export function SubscriptionPage() {
                 {LEGAL.supportEmail && (
                   <a
                     href={supportMailto(`Cancelar assinatura Money - ${user?.email ?? ''}`)}
+                    className="font-medium text-brand-400 underline"
+                  >
+                    Pedir por e-mail
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      <Modal open={refundOpen} onClose={() => setRefundOpen(false)} title="Pedir reembolso">
+        <div className="flex flex-col gap-4 text-sm text-ink-secondary">
+          <p>
+            Você pode pedir o reembolso em até <strong className="text-ink-primary">7 dias depois de cada pagamento</strong>{' '}
+            (direito de arrependimento do Código de Defesa do Consumidor). O valor volta pela mesma forma de pagamento.
+          </p>
+          <p>
+            Com o reembolso, o <strong className="text-ink-primary">acesso ao app termina na hora</strong>. Seus dados
+            continuam salvos e voltam a aparecer se você assinar de novo.
+          </p>
+          <ol className="flex list-decimal flex-col gap-2 pl-5">
+            <li>
+              Abra o e-mail de confirmação da compra que a Kiwify enviou para{' '}
+              <strong className="text-ink-primary">{user?.email}</strong> e procure a opção de reembolso ou ajuda com a compra.
+            </li>
+            <li>
+              Ou entre em{' '}
+              <a
+                href="https://dashboard.kiwify.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-brand-400 underline"
+              >
+                dashboard.kiwify.com.br
+              </a>{' '}
+              com esse mesmo e-mail, abra suas compras e peça o reembolso da do Money.
+            </li>
+          </ol>
+          {(LEGAL.supportWhatsapp || LEGAL.supportEmail) && (
+            <div className="rounded-2xl border border-border p-3">
+              <p className="mb-2">Prefere que a gente faça? Peça aqui:</p>
+              <div className="flex flex-wrap gap-3">
+                {LEGAL.supportWhatsapp && (
+                  <a
+                    href={supportWhatsappUrl(`Olá! Quero pedir o reembolso da minha assinatura do Money. Meu e-mail: ${user?.email ?? ''}`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-brand-400 underline"
+                  >
+                    Pedir pelo WhatsApp
+                  </a>
+                )}
+                {LEGAL.supportEmail && (
+                  <a
+                    href={supportMailto(`Reembolso assinatura Money - ${user?.email ?? ''}`)}
                     className="font-medium text-brand-400 underline"
                   >
                     Pedir por e-mail
