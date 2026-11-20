@@ -1,0 +1,75 @@
+import {
+  Banknote,
+  Briefcase,
+  TrendingUp,
+  PlusCircle,
+  Home,
+  Utensils,
+  Car,
+  HeartPulse,
+  GraduationCap,
+  Ticket,
+  ShoppingBag,
+  Repeat,
+  MoreHorizontal,
+  Wallet,
+  CreditCard,
+  PiggyBank,
+  Landmark,
+  Target,
+  Tag,
+  Gift,
+  Plane,
+  Dumbbell,
+  Coffee,
+  Smartphone,
+  type LucideIcon,
+} from 'lucide-react'
+
+export const ICON_MAP: Record<string, LucideIcon> = {
+  banknote: Banknote,
+  briefcase: Briefcase,
+  'trending-up': TrendingUp,
+  'plus-circle': PlusCircle,
+  home: Home,
+  utensils: Utensils,
+  car: Car,
+  'heart-pulse': HeartPulse,
+  'graduation-cap': GraduationCap,
+  ticket: Ticket,
+  'shopping-bag': ShoppingBag,
+  repeat: Repeat,
+  'more-horizontal': MoreHorizontal,
+  wallet: Wallet,
+  'credit-card': CreditCard,
+  'piggy-bank': PiggyBank,
+  landmark: Landmark,
+  target: Target,
+  tag: Tag,
+  gift: Gift,
+  plane: Plane,
+  dumbbell: Dumbbell,
+  coffee: Coffee,
+  smartphone: Smartphone,
+}
+
+export const ICON_OPTIONS = Object.keys(ICON_MAP)
+
+export function resolveIcon(name: string | null | undefined): LucideIcon {
+  return (name && ICON_MAP[name]) || Tag
+}
+
+export const COLOR_OPTIONS = [
+  '#2DD4BF',
+  '#14E0B4',
+  '#4FD1C5',
+  '#81E6D9',
+  '#F87171',
+  '#FB923C',
+  '#FBBF24',
+  '#F472B6',
+  '#A78BFA',
+  '#60A5FA',
+  '#FB7185',
+  '#94A3B8',
+]

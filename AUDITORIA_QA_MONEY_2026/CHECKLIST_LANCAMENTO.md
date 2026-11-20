@@ -1,0 +1,13 @@
+# Checklist de lançamento
+- [ ] Corrigir ALTA-01, ALTA-02, ALTA-03 e retestar
+- [ ] Criar projeto Supabase de TESTE + usuários A e B; rodar suíte completa (todas as abas)
+- [ ] Testar webhook Kiwify com eventos reais de sandbox (compra, renovação, reembolso, cancelamento, atraso)
+- [ ] Confirmar tabela de preços e limites com o negócio
+- [ ] Desativar/isolar Asaas legado
+- [ ] Rodar Firefox, WebKit e aparelhos reais (iPhone Safari, Android Chrome) incluindo PWA e push
+- [ ] Lazy-load de rotas (bundle < 500 KB)
+- [ ] Senha mínima 8 + proteção de senha vazada; trocar a senha exposta no chat
+- [ ] Headers de segurança (CSP/HSTS) e `.vercelignore`
+- [ ] Backup/PITR do Supabase ativo; monitoramento de erros
+- [ ] Publicar `npm run build` + `vercel --prod` das mudanças pendentes (aviso sem horário)
+- [ ] Decidir sobre módulo de patrimônio (ativos − passivos): implementar ou retirar do material de venda
