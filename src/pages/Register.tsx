@@ -45,6 +45,11 @@ export function RegisterPage() {
   const chosenPlan = parsePlanParam(searchParams.get('plan'))
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  // reenviar o e-mail de confirmação (Supabase limita reenvios; aqui espera 60 s entre um e outro)
+  const [signupEmail, setSignupEmail] = useState('')
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [resendError, setResendError] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   // e-mail que já tinha conta: guardado para enviar o link de nova senha com um clique
   const [existingEmail, setExistingEmail] = useState('')
@@ -60,6 +65,30 @@ export function RegisterPage() {
   useEffect(() => {
     trackOnce('funnel', 'register_view', { planId: chosenPlan?.id })
   }, [chosenPlan?.id])
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
+
+  async function resendConfirmation() {
+    if (!signupEmail || cooldown > 0) return
+    setResendError(null)
+    setResendState('sending')
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: signupEmail,
+      options: { emailRedirectTo: chosenPlan ? `${window.location.origin}/?plan=${chosenPlan.id}` : window.location.origin },
+    })
+    if (error) {
+      setResendState('idle')
+      setResendError(translateAuthError(error.message))
+      return
+    }
+    setResendState('sent')
+    setCooldown(60)
+  }
 
   async function onSubmit(values: FormValues) {
     setFormError(null)
@@ -104,6 +133,8 @@ export function RegisterPage() {
       navigate('/', { replace: true })
       return
     }
+    setSignupEmail(values.email)
+    setCooldown(60)
     setSuccess(true)
   }
 
@@ -160,8 +191,28 @@ export function RegisterPage() {
           {chosenPlan ? `. Ao confirmar, você já cai na página de pagamento do plano ${chosenPlan.name}.` : '.'}
         </p>
         <p className="mt-3 rounded-2xl border border-border px-3 py-2 text-center text-xs text-ink-secondary">
-          O e-mail chega com o assunto <span className="font-semibold text-ink-primary">“Confirme seu e-mail no Money”</span>. Se não aparecer em alguns minutos, olhe a caixa de spam ou lixo eletrônico. O link vale por 1 hora.
+          O e-mail chega com o assunto <span className="font-semibold text-ink-primary">“Confirme seu e-mail no Money”</span>. Se não aparecer em alguns minutos, olhe as abas <span className="font-semibold text-ink-primary">Spam</span> e <span className="font-semibold text-ink-primary">Promoções</span> do Gmail. O link vale por 1 hora.
         </p>
+        {signupEmail && (
+          <div className="mt-3 text-center text-sm">
+            <button
+              type="button"
+              onClick={resendConfirmation}
+              disabled={cooldown > 0 || resendState === 'sending'}
+              className="font-medium text-brand-300 underline disabled:text-ink-muted disabled:no-underline"
+            >
+              {resendState === 'sending'
+                ? 'Enviando…'
+                : cooldown > 0
+                  ? `Não chegou? Reenviar em ${cooldown}s`
+                  : 'Não chegou? Reenviar e-mail'}
+            </button>
+            {resendState === 'sent' && cooldown > 0 && (
+              <p className="mt-1 text-xs text-ink-secondary">E-mail reenviado para {signupEmail}.</p>
+            )}
+            {resendError && <p className="mt-1 text-xs text-danger">{resendError}</p>}
+          </div>
+        )}
         <Link to="/login">
           <Button className="mt-6 w-full" size="lg">
             Ir para o login
