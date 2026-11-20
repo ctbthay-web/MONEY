@@ -1,0 +1,257 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  /* ---- Modo noturno (verde) — padrão ---- */
+  --brand-50: var(--a-50);
+  --brand-100: var(--a-100);
+  --brand-200: var(--a-200);
+  --brand-300: var(--a-300);
+  --brand-400: var(--a-400);
+  --brand-500: var(--a-500);
+  --brand-600: var(--a-600);
+  --brand-700: var(--a-700);
+  --brand-800: var(--a-800);
+  --brand-900: var(--a-900);
+  --positive: 74 222 128;
+  --danger: 242 153 153;
+  --danger-soft: rgba(242, 153, 153, 0.14);
+  --danger-on: 43 10 10;
+  --warning: 242 200 121;
+  --chart-tooltip-text: #eafbf4;
+  --ink-primary: 234 251 244;
+  --ink-secondary: 143 173 165;
+  --ink-muted: 92 115 108;
+  --c-bg: #030b09;
+  --c-bg-soft: #050f0c;
+  --c-surface: rgba(255, 255, 255, 0.035);
+  --c-surface-light: rgba(255, 255, 255, 0.055);
+  --c-surface-lighter: rgba(255, 255, 255, 0.08);
+  --c-border: rgb(var(--a-300) / 0.14);
+  --c-border-strong: rgb(var(--a-300) / 0.32);
+  --glass-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%);
+  --card-shadow: 0 4px 28px -10px rgba(0, 0, 0, 0.5);
+  --aurora:
+    radial-gradient(ellipse 900px 520px at 12% -8%, rgb(var(--a-300) / 0.16), transparent 60%),
+    radial-gradient(ellipse 820px 620px at 105% 8%, rgba(157, 125, 232, 0.13), transparent 55%),
+    radial-gradient(ellipse 900px 700px at 50% 105%, rgb(var(--a-500) / 0.1), transparent 60%),
+    linear-gradient(180deg, #030b09 0%, #061713 42%, #050e14 100%);
+  --chart-grid: rgba(255, 255, 255, 0.07);
+  --chart-axis: #5c736c;
+  --chart-text: #8fada5;
+  --chart-tooltip-bg: #0b1712;
+  --chart-line: rgb(var(--a-300));
+  --c-modal: linear-gradient(155deg, #12241e 0%, #0b1712 100%);
+  --option-bg: #0a1a16;
+  --scroll-thumb: rgb(var(--a-300) / 0.2);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior-y: none;
+}
+
+body {
+  @apply text-ink-primary font-sans antialiased;
+  background: var(--c-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Fundo aurora fixo atrás de toda a aplicação — camadas de gradiente, não cor sólida. */
+.app-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--aurora);
+  pointer-events: none;
+}
+.app-aurora::before,
+.app-aurora::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+.app-aurora::before {
+  top: -10%;
+  left: -5%;
+  width: 520px;
+  height: 420px;
+  background: radial-gradient(circle, rgb(var(--a-300) / 0.16), transparent 70%);
+  animation: aurora-drift 24s ease-in-out infinite;
+}
+.app-aurora::after {
+  bottom: -15%;
+  right: -8%;
+  width: 620px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(157, 125, 232, 0.13), transparent 70%);
+  animation: aurora-drift 28s ease-in-out infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-aurora::before,
+  .app-aurora::after {
+    animation: none;
+  }
+}
+
+::selection {
+  background: rgb(var(--a-300) / 0.3);
+  color: rgb(var(--ink-primary));
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--a-400) / 0.5);
+}
+
+/* O popup nativo de <select> é desenhado pelo sistema operacional, não pela nossa CSS —
+   não dá pra aplicar vidro/blur nele. O melhor possível é escurecer e combinar com o tema. */
+select option {
+  color: rgb(var(--ink-primary));
+  background-color: var(--option-bg);
+}
+select option:checked {
+  background-color: rgb(var(--a-800));
+  color: rgb(var(--a-200));
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Vidro fosco discreto — usado em quase toda superfície elevada, não é destaque de nada. */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--c-border);
+  }
+
+  /* Superfície opaca: modais, avisos e barra inferior — nada do conteúdo atrás pode aparecer. */
+  .solid-surface {
+    background: var(--c-modal);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Brilho reservado para o que é MAIS importante da tela: saldo, CTA principal, item selecionado. */
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px rgb(var(--a-300) / 0.32),
+      0 0 60px -10px rgb(var(--a-300) / 0.5);
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #ffffff 0%, rgb(var(--a-100)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* ---- Modo claro (branco) ---- */
+:root[data-mode='light'] {
+  color-scheme: light;
+  --brand-200: var(--a-800);
+  --brand-300: var(--a-700);
+  --brand-400: var(--a-600);
+  --positive: 21 128 61;
+  --danger: 190 38 52;
+  --danger-soft: rgba(190, 38, 52, 0.1);
+  --danger-on: 255 255 255;
+  --warning: 146 84 4;
+  --chart-tooltip-text: #0f211d;
+  --ink-primary: 15 33 29;
+  --ink-secondary: 70 94 87;
+  --ink-muted: 112 134 127;
+  --c-bg: #f3f7f6;
+  --c-bg-soft: #ffffff;
+  --c-surface: rgba(0, 0, 0, 0.03);
+  --c-surface-light: rgba(0, 0, 0, 0.05);
+  --c-surface-lighter: rgba(0, 0, 0, 0.07);
+  --c-border: rgb(var(--a-700) / 0.16);
+  --c-border-strong: rgb(var(--a-700) / 0.34);
+  --glass-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.74) 100%);
+  --card-shadow: 0 4px 24px -10px rgba(15, 40, 34, 0.18);
+  --aurora:
+    radial-gradient(ellipse 900px 520px at 12% -8%, rgb(var(--a-300) / 0.3), transparent 60%),
+    radial-gradient(ellipse 820px 620px at 105% 8%, rgba(157, 125, 232, 0.12), transparent 55%),
+    radial-gradient(ellipse 900px 700px at 50% 105%, rgb(var(--a-400) / 0.18), transparent 60%),
+    linear-gradient(180deg, #f8fbfa 0%, #eef5f3 100%);
+  --chart-grid: rgba(0, 0, 0, 0.08);
+  --chart-axis: #6b837c;
+  --chart-text: #46605a;
+  --chart-tooltip-bg: #ffffff;
+  --chart-line: rgb(var(--a-600));
+  --c-modal: #ffffff;
+  --option-bg: #ffffff;
+  --scroll-thumb: rgb(var(--a-700) / 0.25);
+}
+:root[data-mode='light'] body {
+  background: var(--c-bg);
+}
+:root[data-mode='light'] .bg-white\/5,
+:root[data-mode='light'] .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+:root[data-mode='light'] .hover\:bg-white\/\[0\.08\]:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+:root[data-mode='light'] [class*='border-white'] {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+:root[data-mode='light'] .text-gradient-brand {
+  background: linear-gradient(135deg, #0f211d 0%, rgb(var(--a-700)) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}

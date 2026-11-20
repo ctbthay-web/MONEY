@@ -1,0 +1,9 @@
+.env
+.env.*
+node_modules
+Captura*.png
+money-preview-standalone.html
+AUDITORIA_QA_MONEY_2026
+FASE2_CORRECOES
+reports
+screenshots

@@ -1,0 +1,9 @@
+# Homologação — passo a passo (você faz 1 a 4; o resto está pronto)
+1. **Crie um projeto Supabase NOVO** ("money-homolog"). Nunca use o de produção (ref `vgwzmcvkrdmfqalnoukh`; os scripts recusam esse ref).
+2. No SQL Editor do projeto novo, rode `00_MIGRACOES_COMPLETAS.sql` (001–026 + 027 + 028; carrega num único script — validado em PGlite). Habilite `pg_cron`/`pg_net` se pedir. Rode **uma vez** (as migrações antigas 001–003 não são re-executáveis).
+3. Copie `homologacao.env.exemplo.txt` para `.env.local` (não versionar) e preencha URL, anon key e a service role **de homologação**. Use e-mails `.test`.
+4. Crie os usuários A e B: `node --env-file=.env.local scripts/seed-homologacao.mjs` (recusa produção e e-mails que não terminam em `.test`; **não testado contra um Supabase real**) e rode `select public.seed_homologacao('usuario.a@money-homolog.test','A');` e idem para B (`90_seed_dados_ficticios.sql`; validado: idempotente, recusa e-mail real, A não vê dados de B).
+5. Rode: `npm run dev` (apontando para homologação) e `npx playwright test tests/homologacao tests/authentication/session-flow.spec.ts`. Para Firefox/WebKit/iPhone real: `npx playwright install firefox webkit` na sua máquina e `--project=firefox` etc.
+## O que a suíte de homologação cobre (api-backend.spec.ts, 24 testes)
+AUTH-01..06 · ISO-01..03 (A×B) · PERM-01..03 · PLAN-01..07 (limite, devolução de cota, série, created_at forjado, series_id forjado, auditoria, Premium) · FEAT-01 (empréstimo/orçamento por plano) · SYNC-01 (2 dispositivos). `ui-fluxos.spec.ts`: navegação autenticada por 7 rotas, sessão, logout; cadastro, sync pela tela e navegadores reais ficam `fixme` (Não executado).
+Sem o projeto de homologação **todos ficam "skip"** (Bloqueado por dependência externa), nunca "aprovado". Os testes recusam rodar se a URL for a de produção.
