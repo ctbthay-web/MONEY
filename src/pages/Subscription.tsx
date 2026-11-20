@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Modal } from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
 import { PlanCards } from '../components/finance/PlanCards'
+import { RefundModal } from '../components/finance/RefundModal'
 import { useAuth } from '../features/auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { computeAccess } from '../lib/access'
@@ -246,47 +247,7 @@ export function SubscriptionPage() {
         </div>
       </Modal>
 
-      <Modal open={refundOpen} onClose={() => setRefundOpen(false)} title="Pedir reembolso">
-        <div className="flex flex-col gap-4 text-sm text-ink-secondary">
-          <p>
-            Você pode pedir o reembolso em até <strong className="text-ink-primary">7 dias depois de cada pagamento</strong>{' '}
-            (direito de arrependimento do Código de Defesa do Consumidor). O valor volta pela mesma forma de pagamento.
-          </p>
-          <p>
-            Com o reembolso, o <strong className="text-ink-primary">acesso ao app termina na hora</strong>. Seus dados
-            continuam salvos e voltam a aparecer se você assinar de novo.
-          </p>
-          {(LEGAL.supportWhatsapp || LEGAL.supportEmail) && (
-            <div className="rounded-2xl border border-border p-3">
-              <p className="mb-2 font-medium text-ink-primary">Peça o reembolso para nós:</p>
-              <div className="flex flex-wrap gap-3">
-                {LEGAL.supportWhatsapp && (
-                  <a
-                    href={supportWhatsappUrl(`Olá! Quero pedir o reembolso da minha assinatura do Money. Meu e-mail: ${user?.email ?? ''}`)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-brand-400 underline"
-                  >
-                    Pedir pelo WhatsApp
-                  </a>
-                )}
-                {LEGAL.supportEmail && (
-                  <a
-                    href={supportMailto(`Reembolso assinatura Money - ${user?.email ?? ''}`)}
-                    className="font-medium text-brand-400 underline"
-                  >
-                    Pedir por e-mail
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-          <p className="text-xs text-ink-muted">
-            Você também pode responder ao e-mail de confirmação da compra que a Kiwify enviou para {user?.email}, pedindo o
-            reembolso.
-          </p>
-        </div>
-      </Modal>
+      <RefundModal open={refundOpen} onClose={() => setRefundOpen(false)} />
 
       <ConfirmDialog
         open={cancelOpen}
