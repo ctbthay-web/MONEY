@@ -214,27 +214,9 @@ export function SubscriptionPage() {
             <strong className="text-ink-primary">continua com acesso até o fim do período já pago</strong>
             {profile?.paid_until ? ` (${fmt(new Date(profile.paid_until))})` : ''}.
           </p>
-          <ol className="flex list-decimal flex-col gap-2 pl-5">
-            <li>
-              Abra o e-mail de confirmação da compra que a Kiwify enviou para{' '}
-              <strong className="text-ink-primary">{user?.email}</strong> e toque em gerenciar assinatura.
-            </li>
-            <li>
-              Ou entre em{' '}
-              <a
-                href="https://dashboard.kiwify.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-brand-400 underline"
-              >
-                dashboard.kiwify.com.br
-              </a>{' '}
-              com esse mesmo e-mail, abra suas compras/assinaturas e cancele a do Money.
-            </li>
-          </ol>
           {(LEGAL.supportWhatsapp || LEGAL.supportEmail) && (
             <div className="rounded-2xl border border-border p-3">
-              <p className="mb-2">Não conseguiu? Peça para nós e cancelamos para você:</p>
+              <p className="mb-2 font-medium text-ink-primary">Peça o cancelamento para nós:</p>
               <div className="flex flex-wrap gap-3">
                 {LEGAL.supportWhatsapp && (
                   <a
@@ -257,6 +239,10 @@ export function SubscriptionPage() {
               </div>
             </div>
           )}
+          <p className="text-xs text-ink-muted">
+            Você também pode usar o link de gerenciar assinatura no e-mail de confirmação da compra que a Kiwify enviou para{' '}
+            {user?.email}.
+          </p>
         </div>
       </Modal>
 
@@ -270,27 +256,9 @@ export function SubscriptionPage() {
             Com o reembolso, o <strong className="text-ink-primary">acesso ao app termina na hora</strong>. Seus dados
             continuam salvos e voltam a aparecer se você assinar de novo.
           </p>
-          <ol className="flex list-decimal flex-col gap-2 pl-5">
-            <li>
-              Abra o e-mail de confirmação da compra que a Kiwify enviou para{' '}
-              <strong className="text-ink-primary">{user?.email}</strong> e procure a opção de reembolso ou ajuda com a compra.
-            </li>
-            <li>
-              Ou entre em{' '}
-              <a
-                href="https://dashboard.kiwify.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-brand-400 underline"
-              >
-                dashboard.kiwify.com.br
-              </a>{' '}
-              com esse mesmo e-mail, abra suas compras e peça o reembolso da do Money.
-            </li>
-          </ol>
           {(LEGAL.supportWhatsapp || LEGAL.supportEmail) && (
             <div className="rounded-2xl border border-border p-3">
-              <p className="mb-2">Prefere que a gente faça? Peça aqui:</p>
+              <p className="mb-2 font-medium text-ink-primary">Peça o reembolso para nós:</p>
               <div className="flex flex-wrap gap-3">
                 {LEGAL.supportWhatsapp && (
                   <a
@@ -313,6 +281,10 @@ export function SubscriptionPage() {
               </div>
             </div>
           )}
+          <p className="text-xs text-ink-muted">
+            Você também pode responder ao e-mail de confirmação da compra que a Kiwify enviou para {user?.email}, pedindo o
+            reembolso.
+          </p>
         </div>
       </Modal>
 
